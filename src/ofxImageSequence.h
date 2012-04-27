@@ -83,6 +83,8 @@ class ofxImageSequence : public ofBaseHasTexture{
 	 */
 	void loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
 	
+    void loadSequence(string _folder);
+    
 	void unloadSequence();			//clears out all frames and frees up memory
 	void preloadAllFrames();		//immediately loads all frames in the sequence, memory intensive but fastest scrubbing
 	

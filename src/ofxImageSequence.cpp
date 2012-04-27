@@ -99,6 +99,28 @@ void ofxImageSequence::loadSequence(string prefix, string filetype,  int startDi
 	height = sequence[0]->getHeight();
 }
 
+void ofxImageSequence::loadSequence(string _folder){
+    // read the directory for the images
+    // we know that they are named in seq
+    ofDirectory dir;
+    
+    int nFiles = dir.listDir(_folder);
+    if(nFiles) {
+        for(int i=0; i<dir.numFiles(); i++) {
+            filenames.push_back( new string(dir.getPath(i)) );
+            sequence.push_back(NULL);
+        }
+    } else ofLog(OF_LOG_ERROR, "Could not find folder " + _folder);
+    
+    loaded = true;
+	
+	lastFrameLoaded = -1;
+	loadFrame(0);
+	
+	width  = sequence[0]->getWidth();
+	height = sequence[0]->getHeight();
+}
+
 void ofxImageSequence::preloadAllFrames()
 {
 	if(!loaded){
