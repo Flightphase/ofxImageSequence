@@ -106,6 +106,7 @@ class ofxImageSequence : public ofBaseHasTexture{
 	int getFrameIndexAtPercent(float percent);	//returns percent (0.0 - 1.0) for a given frame
 	float getPercentAtFrameIndex(int index);	//returns a frame index for a percent
 	
+    int getCurrentFrame(){ return currentFrame; };
 	int getTotalFrames();					//returns how many frames are in the sequence
 	float getLengthInSeconds();				//returns the sequence duration based on frame rate
 	
