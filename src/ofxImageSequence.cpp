@@ -182,10 +182,10 @@ ofTexture* ofxImageSequence::getFrameAtPercent(float percent)
 
 int ofxImageSequence::getFrameIndexAtPercent(float percent)
 {
-	while (percent > 1.0) percent--;
-	while (percent < 0.0) percent++;
+    // PR: fix and optimize for big numbers
+    if (percent < 0.0 || percent > 1.0) percent -= floor(percent);
 	
-	return (int)MIN(percent*(sequence.size() - .5),sequence.size()-1);
+	return MIN((int)(percent*sequence.size()), sequence.size()-1);
 }
 
 ofTexture* ofxImageSequence::getFrameForTime(float time)
@@ -259,6 +259,6 @@ int ofxImageSequence::imageTypeToGLType(int imageType)
 			return GL_RGBA;
 		default:
 			ofLog(OF_LOG_ERROR, "ofxImageSequence - unsupported image type for image");
-			break;
+			return GL_RGB;
 	}
 }
