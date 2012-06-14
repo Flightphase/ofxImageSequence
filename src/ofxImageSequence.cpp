@@ -182,7 +182,6 @@ ofTexture* ofxImageSequence::getFrameAtPercent(float percent)
 
 int ofxImageSequence::getFrameIndexAtPercent(float percent)
 {
-    // PR: fix and optimize for big numbers
     if (percent < 0.0 || percent > 1.0) percent -= floor(percent);
 	
 	return MIN((int)(percent*sequence.size()), sequence.size()-1);
