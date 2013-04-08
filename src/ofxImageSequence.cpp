@@ -103,7 +103,7 @@ void ofxImageSequence::loadSequence(string _folder){
     // read the directory for the images
     // we know that they are named in seq
     ofDirectory dir;
-    
+    dir.sort();
     int nFiles = dir.listDir(_folder);
     if(nFiles) {
         for(int i=0; i<dir.numFiles(); i++) {
