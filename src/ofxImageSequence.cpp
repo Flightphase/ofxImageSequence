@@ -283,3 +283,8 @@ int ofxImageSequence::imageTypeToGLType(int imageType)
 			return GL_RGB;
 	}
 }
+
+bool ofxImageSequence::isLoaded()						//returns true if the sequence has been loaded
+{
+    return loaded;
+}
