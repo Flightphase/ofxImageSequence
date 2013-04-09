@@ -103,8 +103,8 @@ void ofxImageSequence::loadSequence(string _folder){
     // read the directory for the images
     // we know that they are named in seq
     ofDirectory dir;
-    
     int nFiles = dir.listDir(_folder);
+    dir.sort();
     if(nFiles) {
         for(int i=0; i<dir.numFiles(); i++) {
             filenames.push_back( new string(dir.getPath(i)) );
@@ -282,4 +282,9 @@ int ofxImageSequence::imageTypeToGLType(int imageType)
 			ofLog(OF_LOG_ERROR, "ofxImageSequence - unsupported image type for image");
 			return GL_RGB;
 	}
+}
+
+bool ofxImageSequence::isLoaded()						//returns true if the sequence has been loaded
+{
+    return loaded;
 }
