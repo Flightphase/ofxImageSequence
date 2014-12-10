@@ -83,7 +83,10 @@ class ofxImageSequence : public ofBaseHasTexture{
 	 *	numDigits	=> 3
 	 */
 	void loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
-	
+
+	//sets an extension, like png or jpg
+	void setExtension(string prefix);
+
     void loadSequence(string _folder);
     
 	void unloadSequence();			//clears out all frames and frees up memory
@@ -125,10 +128,10 @@ class ofxImageSequence : public ofBaseHasTexture{
   protected:
 	
 	int currentFrame;
-	
 	ofImage	loader;
 	vector<ofTexture*> sequence;
 	vector<string*> filenames;
+	string extension;
 
 	int imageTypeToGLType(int imageType);
 	float width, height;

@@ -104,6 +104,9 @@ void ofxImageSequence::loadSequence(string _folder){
     // read the directory for the images
     // we know that they are named in seq
     ofDirectory dir;
+	if(extension != ""){
+		dir.allowExt(extension);
+	}
     int nFiles = dir.listDir(_folder);
     dir.sort();
     if(nFiles) {
@@ -114,7 +117,7 @@ void ofxImageSequence::loadSequence(string _folder){
     }
 	else{
 		ofLog(OF_LOG_ERROR, "Could not find folder " + _folder);
-		}
+	}
     
     loaded = true;
 	
@@ -123,6 +126,10 @@ void ofxImageSequence::loadSequence(string _folder){
 	
 	width  = sequence[0]->getWidth();
 	height = sequence[0]->getHeight();
+}
+
+void ofxImageSequence::setExtension(string ext){
+	extension = ext;
 }
 
 void ofxImageSequence::preloadAllFrames()
@@ -137,6 +144,11 @@ void ofxImageSequence::preloadAllFrames()
 
 void ofxImageSequence::loadFrame(int imageIndex)
 {
+	if(imageIndex >= sequence.size()){
+		ofLogError("ofxImageSequence::loadFrame") << "Calling a frame out of bounds.";
+		return;
+	}
+
 	if(sequence[imageIndex] != NULL){
 		cout << "warning calling load frame on a non null index" << endl;
 		return;
