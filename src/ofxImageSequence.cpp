@@ -3,6 +3,7 @@
  *
  * Created by James George, http://www.jamesgeorge.org
  * in collaboration with FlightPhase http://www.flightphase.com
+ *		- Updated for 0.8.4 by James George on 12/10/2014 for Specular (http://specular.cc) (how time flies!) 
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
