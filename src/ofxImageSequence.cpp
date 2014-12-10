@@ -111,7 +111,10 @@ void ofxImageSequence::loadSequence(string _folder){
             filenames.push_back( new string(dir.getPath(i)) );
             sequence.push_back(NULL);
         }
-    } else ofLog(OF_LOG_ERROR, "Could not find folder " + _folder);
+    }
+	else{
+		ofLog(OF_LOG_ERROR, "Could not find folder " + _folder);
+		}
     
     loaded = true;
 	
@@ -259,7 +262,6 @@ ofTexture& ofxImageSequence::getTextureReference()
 	return *sequence[currentFrame];
 }
 
-
 float ofxImageSequence::getLengthInSeconds()
 {
 	return getTotalFrames() / frameRate;
@@ -285,7 +287,6 @@ int ofxImageSequence::imageTypeToGLType(int imageType)
 	}
 }
 
-bool ofxImageSequence::isLoaded()						//returns true if the sequence has been loaded
-{
+bool ofxImageSequence::isLoaded(){						//returns true if the sequence has been loaded
     return loaded;
 }
