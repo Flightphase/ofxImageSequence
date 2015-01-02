@@ -60,19 +60,12 @@ ofxImageSequence::~ofxImageSequence()
 	}
 }
 
-void ofxImageSequence::loadSequence(string prefix, string filetype,  int startDigit, int endDigit)
+bool ofxImageSequence::loadSequence(string prefix, string filetype,  int startDigit, int endDigit)
 {
-	loadSequence(prefix, filetype, startDigit, endDigit, 0);
+	return loadSequence(prefix, filetype, startDigit, endDigit, 0);
 }
 
-void ofxImageSequence::setMinMagFilter(int newMinFilter, int newMagFilter)
-{
-	minFilter = newMinFilter;
-	magFilter = newMagFilter;
-	nonDefaultFiltersUsed = true;
-}
-
-void ofxImageSequence::loadSequence(string prefix, string filetype,  int startDigit, int endDigit, int numDigits)
+bool ofxImageSequence::loadSequence(string prefix, string filetype,  int startDigit, int endDigit, int numDigits)
 {
 	char imagename[1024];
 	stringstream format;
@@ -98,26 +91,35 @@ void ofxImageSequence::loadSequence(string prefix, string filetype,  int startDi
 	
 	width  = sequence[0]->getWidth();
 	height = sequence[0]->getHeight();
+	return true;
 }
 
-void ofxImageSequence::loadSequence(string _folder){
-    // read the directory for the images
-    // we know that they are named in seq
+bool ofxImageSequence::loadSequence(string _folder){
+	unloadSequence();
+
     ofDirectory dir;
 	if(extension != ""){
 		dir.allowExt(extension);
 	}
-    int nFiles = dir.listDir(_folder);
-    dir.sort();
-    if(nFiles) {
-        for(int i=0; i<dir.numFiles(); i++) {
-            filenames.push_back( new string(dir.getPath(i)) );
-            sequence.push_back(NULL);
-        }
-    }
-	else{
-		ofLog(OF_LOG_ERROR, "Could not find folder " + _folder);
+	
+	if(!ofFile(_folder).exists()){
+		ofLogError("ofxImageSequence::loadSequence") << "Could not find folder " << _folder;
+		return false;
 	}
+
+    int nFiles = dir.listDir(_folder);
+    if(nFiles == 0) {
+		ofLogError("ofxImageSequence::loadSequence") << "No image files found in " << _folder;
+		return false;
+	}
+
+    // read the directory for the images
+    // we know that they are named in seq
+	dir.sort();
+    for(int i=0; i<dir.numFiles(); i++) {
+        filenames.push_back( new string(dir.getPath(i)) );
+        sequence.push_back(NULL);
+    }
     
     loaded = true;
 	
@@ -130,6 +132,13 @@ void ofxImageSequence::loadSequence(string _folder){
 
 void ofxImageSequence::setExtension(string ext){
 	extension = ext;
+}
+
+void ofxImageSequence::setMinMagFilter(int newMinFilter, int newMagFilter)
+{
+	minFilter = newMinFilter;
+	magFilter = newMagFilter;
+	nonDefaultFiltersUsed = true;
 }
 
 void ofxImageSequence::preloadAllFrames()
@@ -150,14 +159,14 @@ void ofxImageSequence::loadFrame(int imageIndex)
 	}
 
 	if(sequence[imageIndex] != NULL){
-		cout << "warning calling load frame on a non null index" << endl;
+		ofLogError("ofxImageSequence::loadFrame") << "warning calling load frame on a non null index";
 		return;
 	}
 
 	for(int i = lastFrameLoaded+1; i <= imageIndex; i++){
 		sequence[i] = new ofTexture();
 		if(!loader.loadImage( *filenames[i] )){
-			ofLog(OF_LOG_ERROR, "ofxImageSequence -- failed to load image %s. returning", filenames[i]->c_str());
+			ofLogError("ofxImageSequence::loadFrame") << "failed to load image %s. returning " << *filenames[i];
 			return;
 		}
 		

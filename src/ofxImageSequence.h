@@ -50,9 +50,14 @@
 
 class ofxImageSequence : public ofBaseHasTexture{
   public:
+
 	ofxImageSequence();
 	~ofxImageSequence();
 	
+	
+	//sets an extension, like png or jpg
+	void setExtension(string prefix);
+
 	/**
 	 *	use this method to load sequences formatted like:
 	 *	path/to/images/myImage8.png
@@ -65,7 +70,7 @@ class ofxImageSequence : public ofBaseHasTexture{
 	 *	startIndex	=> 8
 	 *	endIndex	=> 10
 	 */
-	void loadSequence(string prefix, string filetype, int startIndex, int endIndex);
+	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex);
 
 	/**
 	 *	Use this functiont o load sequences formatted like
@@ -82,12 +87,10 @@ class ofxImageSequence : public ofBaseHasTexture{
 	 *	endIndex	=> 7
 	 *	numDigits	=> 3
 	 */
-	void loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
+	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
+    bool loadSequence(string folder);
 
-	//sets an extension, like png or jpg
-	void setExtension(string prefix);
 
-    void loadSequence(string _folder);
     
 	void unloadSequence();			//clears out all frames and frees up memory
 	void preloadAllFrames();		//immediately loads all frames in the sequence, memory intensive but fastest scrubbing
