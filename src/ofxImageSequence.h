@@ -48,12 +48,11 @@
 
 #include "ofMain.h"
 
-class ofxImageSequence : public ofBaseHasTexture{
+class ofxImageSequence : public ofBaseHasTexture {
   public:
 
 	ofxImageSequence();
 	~ofxImageSequence();
-	
 	
 	//sets an extension, like png or jpg
 	void setExtension(string prefix);
@@ -73,7 +72,7 @@ class ofxImageSequence : public ofBaseHasTexture{
 	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex);
 
 	/**
-	 *	Use this functiont o load sequences formatted like
+	 *	Use this function to load sequences formatted like
 	 *
 	 *	path/to/images/myImage004.jpg
 	 *	path/to/images/myImage005.jpg
@@ -90,17 +89,19 @@ class ofxImageSequence : public ofBaseHasTexture{
 	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
     bool loadSequence(string folder);
 
-
-    
 	void unloadSequence();			//clears out all frames and frees up memory
 	void preloadAllFrames();		//immediately loads all frames in the sequence, memory intensive but fastest scrubbing
 	
 	void setFrameRate(float rate); //used for getting frames by time, default is 30fps	
 
 	//these get textures, but also change the
-	ofTexture* getFrame(int index);					//returns a frame at a given index
-	ofTexture* getFrameForTime(float time);			//returns a frame at a given time, used setFrameRate to set time
-	ofTexture* getFrameAtPercent(float percent);	//returns a frame at a percent (0.0 - 1.0) based on the number of frames in the sequence
+	OF_DEPRECATED_MSG("Use getTextureForFrame instead.",   ofTexture* getFrame(int index));		 //returns a frame at a given index
+	OF_DEPRECATED_MSG("Use getTextureForTime instead.",    ofTexture* getFrameForTime(float time)); //returns a frame at a given time, used setFrameRate to set time
+	OF_DEPRECATED_MSG("Use getTextureForPercent instead.", ofTexture* getFrameAtPercent(float percent)); //returns a frame at a given time, used setFrameRate to set time
+
+	ofTexture& getTextureForFrame(int index);		 //returns a frame at a given index
+	ofTexture& getTextureForTime(float time); //returns a frame at a given time, used setFrameRate to set time
+	ofTexture& getTextureForPercent(float percent); //returns a frame at a given time, used setFrameRate to set time
 
 	//if usinsg getTextureRef() use these to change the internal state
 	void setFrame(int index);					
@@ -132,8 +133,10 @@ class ofxImageSequence : public ofBaseHasTexture{
 	
 	int currentFrame;
 	ofImage	loader;
-	vector<ofTexture*> sequence;
-	vector<string*> filenames;
+	//vector<ofTexture*> sequence;
+	vector<ofPixels> sequence;
+	vector<string> filenames;
+	ofTexture texture;
 	string extension;
 
 	int imageTypeToGLType(int imageType);
