@@ -138,6 +138,8 @@ bool ofxImageSequence::loadSequence(string _folder)
 	
 	width  = sequence[0].getWidth();
 	height = sequence[0].getHeight();
+
+	return true;
 }
 
 void ofxImageSequence::setExtension(string ext)
