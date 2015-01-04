@@ -283,38 +283,38 @@ int ofxImageSequence::getFrameIndexAtPercent(float percent)
 ofTexture* ofxImageSequence::getFrameAtPercent(float percent)
 {
 	setFrameAtPercent(percent);
-	return &getTextureReference();
+	return &getTexture();
 }
 
 //deprecated
 ofTexture* ofxImageSequence::getFrameForTime(float time)
 {
 	setFrameForTime(time);
-	return &getTextureReference();
+	return &getTexture();
 }
 
 //deprecated
 ofTexture* ofxImageSequence::getFrame(int index)
 {
 	setFrame(index);
-	return &getTextureReference();
+	return &getTexture();
 }
 
 ofTexture& ofxImageSequence::getTextureForFrame(int index)
 {
 	setFrame(index);
-	return getTextureReference();
+	return getTexture();
 }
 
 ofTexture& ofxImageSequence::getTextureForTime(float time)
 {
 	setFrameForTime(time);
-	return getTextureReference();
+	return getTexture();
 }
 
 ofTexture& ofxImageSequence::getTextureForPercent(float percent){
 	setFrameAtPercent(percent);
-	return getTextureReference();
+	return getTexture();
 }
 
 void ofxImageSequence::setFrame(int index)
@@ -350,7 +350,12 @@ void ofxImageSequence::setFrameAtPercent(float percent)
 	setFrame(getFrameIndexAtPercent(percent));	
 }
 
-ofTexture& ofxImageSequence::getTextureReference()
+ofTexture& ofxImageSequence::getTexture()
+{
+	return texture;
+}
+
+const ofTexture& ofxImageSequence::getTexture() const
 {
 	return texture;
 }

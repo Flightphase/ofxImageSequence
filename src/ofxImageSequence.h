@@ -108,9 +108,12 @@ class ofxImageSequence : public ofBaseHasTexture {
 	void setFrameForTime(float time);			
 	void setFrameAtPercent(float percent);
 	
-	virtual ofTexture& getTextureReference();
+	virtual ofTexture & getTexture();
+	virtual const ofTexture & getTexture() const;
+
 	virtual void setUseTexture(bool bUseTex){/* not used */};
-	
+	virtual bool isUsingTexture() const{return true;}
+
 	int getFrameIndexAtPercent(float percent);	//returns percent (0.0 - 1.0) for a given frame
 	float getPercentAtFrameIndex(int index);	//returns a frame index for a percent
 	
