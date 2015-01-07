@@ -56,6 +56,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 	
 	//sets an extension, like png or jpg
 	void setExtension(string prefix);
+	void setMaxFrames(int maxFrames); //set to limit the number of frames. 0 or less means no limit
 
 	/**
 	 *	use this method to load sequences formatted like:
@@ -141,7 +142,9 @@ class ofxImageSequence : public ofBaseHasTexture {
 	vector<string> filenames;
 	ofTexture texture;
 	string extension;
-
+	
+	
+	int maxFrames;
 	int imageTypeToGLType(int imageType);
 	float width, height;
 	bool loaded;

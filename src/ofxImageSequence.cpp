@@ -52,6 +52,7 @@ ofxImageSequence::ofxImageSequence()
 	lastFrameLoaded = -1;
 	loader.setUseTexture(false);
 	currentFrame = 0;
+	maxFrames = 0;
 }
 
 ofxImageSequence::~ofxImageSequence()
@@ -115,18 +116,25 @@ bool ofxImageSequence::loadSequence(string _folder)
 		return false;
 	}
 
-    int numFiles = dir.listDir(_folder);
+	int numFiles;
+	if(maxFrames > 0){
+		numFiles = MIN(dir.listDir(_folder), maxFrames);
+	}
+	else{	
+		numFiles = dir.listDir(_folder);
+	}
+
     if(numFiles == 0) {
 		ofLogError("ofxImageSequence::loadSequence") << "No image files found in " << _folder;
 		return false;
 	}
 
     // read the directory for the images
-    // we know that they are named in seq
 	#ifdef TARGET_LINUX
 	dir.sort();
 	#endif
-	for(int i = 0; i<dir.numFiles(); i++) {
+
+	for(int i = 0; i < numFiles; i++) {
         filenames.push_back( dir.getPath(i) );
 		sequence.push_back(ofPixels());
     }
@@ -140,6 +148,15 @@ bool ofxImageSequence::loadSequence(string _folder)
 	height = sequence[0].getHeight();
 
 	return true;
+}
+
+//set to limit the number of frames. negative means no limit
+void ofxImageSequence::setMaxFrames(int maxFrames)
+{
+	maxFrames = MAX(maxFrames, 0);
+	if(loaded){
+		ofLogError("ofxImageSequence::setMaxFrames") << "Max frames must be called before load";
+	}
 }
 
 void ofxImageSequence::setExtension(string ext)
@@ -204,32 +221,6 @@ void ofxImageSequence::loadFrame(int imageIndex)
 	
 	lastFrameLoaded = imageIndex;
 
-	/*
-	//if(sequence[imageIndex] != NULL){
-	//	ofLogError("ofxImageSequence::loadFrame") << "warning calling load frame on a non null index";
-	//	return;
-	//}
-
-	for(int i = lastFrameLoaded+1; i <= imageIndex; i++){
-		sequence[i] = new ofTexture();
-		if(!loader.loadImage( *filenames[i] )){
-			ofLogError("ofxImageSequence::loadFrame") << "failed to load image %s. returning " << *filenames[i];
-			return;
-		}
-		
-		if(scale != 1.0){
-			loader.resize(int(loader.getWidth()*scale), int(loader.getHeight()*scale));
-		}
-		
-		sequence[i]->allocate( loader.getWidth(), loader.getHeight(), imageTypeToGLType(loader.type) );				
-		sequence[i]->loadData( loader.getPixels(), loader.getWidth(), loader.getHeight(), imageTypeToGLType(loader.type) );
-		if(nonDefaultFiltersUsed){
-			sequence[i]->setTextureMinMagFilter(minFilter, magFilter);
-		}
-	}
-	
-	lastFrameLoaded = imageIndex;
-	*/
 }
 
 float ofxImageSequence::getPercentAtFrameIndex(int index)
@@ -249,15 +240,6 @@ float ofxImageSequence::getHeight()
 
 void ofxImageSequence::unloadSequence()
 {
-	/*
-	for(int i = 0; i < sequence.size(); i++){
-		if(sequence[i] != NULL){
-			delete sequence[i];
-		}
-		delete filenames[i];
-	}
-	*/
-
 	sequence.clear();
 	filenames.clear();
 	
@@ -330,9 +312,6 @@ void ofxImageSequence::setFrame(int index)
 	}
 	
 	index %= getTotalFrames();
-	
-	//if(sequence[index] == NULL){
-	//}
 	
 	loadFrame(index);
 	currentFrame = index;
