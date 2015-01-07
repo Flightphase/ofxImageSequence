@@ -48,7 +48,6 @@ ofxImageSequence::ofxImageSequence()
 	loaded = false;
 	scale = 1.0;
 	frameRate = 30.0f;
-	nonDefaultFiltersUsed = false;
 	lastFrameLoaded = -1;
 	loader.setUseTexture(false);
 	currentFrame = 0;
@@ -151,9 +150,9 @@ bool ofxImageSequence::loadSequence(string _folder)
 }
 
 //set to limit the number of frames. negative means no limit
-void ofxImageSequence::setMaxFrames(int maxFrames)
+void ofxImageSequence::setMaxFrames(int newMaxFrames)
 {
-	maxFrames = MAX(maxFrames, 0);
+	maxFrames = MAX(newMaxFrames, 0);
 	if(loaded){
 		ofLogError("ofxImageSequence::setMaxFrames") << "Max frames must be called before load";
 	}
@@ -168,7 +167,7 @@ void ofxImageSequence::setMinMagFilter(int newMinFilter, int newMagFilter)
 {
 	minFilter = newMinFilter;
 	magFilter = newMagFilter;
-	nonDefaultFiltersUsed = true;
+	texture.setTextureMinMagFilter(minFilter, magFilter);
 }
 
 void ofxImageSequence::preloadAllFrames()
@@ -213,12 +212,10 @@ void ofxImageSequence::loadFrame(int imageIndex)
 		}
 	}
 
-	if(nonDefaultFiltersUsed){
-		texture.setTextureMinMagFilter(minFilter, magFilter);
-	}
-
 	texture.loadData(sequence[imageIndex]);
 	
+	cout << "FRAME " << lastFrameLoaded << " -> " << imageIndex << endl;
+
 	lastFrameLoaded = imageIndex;
 
 }

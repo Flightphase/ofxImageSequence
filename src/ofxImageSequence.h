@@ -153,7 +153,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 	
 	int minFilter;
 	int magFilter;
-	bool nonDefaultFiltersUsed;
+	//bool nonDefaultFiltersUsed;
 };
 
 
