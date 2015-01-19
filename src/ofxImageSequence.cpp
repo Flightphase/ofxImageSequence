@@ -214,8 +214,6 @@ void ofxImageSequence::loadFrame(int imageIndex)
 
 	texture.loadData(sequence[imageIndex]);
 	
-	cout << "FRAME " << lastFrameLoaded << " -> " << imageIndex << endl;
-
 	lastFrameLoaded = imageIndex;
 
 }
