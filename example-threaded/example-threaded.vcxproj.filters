@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\ofApp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxImageSequence.cpp">
+      <Filter>addons\ofxImageSequence\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons">
+      <UniqueIdentifier>{e6eb17d3-a01b-4bc3-bafe-f7154ab852d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSequence">
+      <UniqueIdentifier>{ddbfe687-55cf-49cc-bcc8-e852dd6e6899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSequence\src">
+      <UniqueIdentifier>{da498873-d257-4226-8b4d-043d337d2a5c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ofApp.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxImageSequence.h">
+      <Filter>addons\ofxImageSequence\src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc" />
+  </ItemGroup>
+</Project>

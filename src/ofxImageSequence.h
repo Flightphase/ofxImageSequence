@@ -48,7 +48,7 @@
 
 #include "ofMain.h"
 
-class ofxImageSequence : public ofBaseHasTexture {
+class ofxImageSequence : public ofBaseHasTexture, public ofThread {
   public:
 
 	ofxImageSequence();
@@ -57,6 +57,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 	//sets an extension, like png or jpg
 	void setExtension(string prefix);
 	void setMaxFrames(int maxFrames); //set to limit the number of frames. 0 or less means no limit
+	void enableThreadedLoad(bool enable);
 
 	/**
 	 *	use this method to load sequences formatted like:
@@ -90,10 +91,11 @@ class ofxImageSequence : public ofBaseHasTexture {
 	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
     bool loadSequence(string folder);
 
-	void unloadSequence();			//clears out all frames and frees up memory
 	void preloadAllFrames();		//immediately loads all frames in the sequence, memory intensive but fastest scrubbing
-	
+	void unloadSequence();			//clears out all frames and frees up memory
+
 	void setFrameRate(float rate); //used for getting frames by time, default is 30fps	
+	void cancelLoad();
 
 	//these get textures, but also change the
 	OF_DEPRECATED_MSG("Use getTextureForFrame instead.",   ofTexture* getFrame(int index));		 //returns a frame at a given index
@@ -109,8 +111,10 @@ class ofxImageSequence : public ofBaseHasTexture {
 	void setFrameForTime(float time);			
 	void setFrameAtPercent(float percent);
 	
-	virtual ofTexture & getTexture();
-	virtual const ofTexture & getTexture() const;
+	OF_DEPRECATED_MSG("Use getTexture() instead.", ofTexture& getTextureReference());
+
+	virtual ofTexture& getTexture();
+	virtual const ofTexture& getTexture() const;
 
 	virtual void setUseTexture(bool bUseTex){/* not used */};
 	virtual bool isUsingTexture() const{return true;}
@@ -125,35 +129,36 @@ class ofxImageSequence : public ofBaseHasTexture {
 	float getWidth();						//returns the width/height of the sequence
 	float getHeight();
 	bool isLoaded();						//returns true if the sequence has been loaded
+	bool isLoading();						//returns true if loading during thread
 	void loadFrame(int imageIndex);			//allows you to load (cache) a frame to avoid a stutter when loading. use this to "read ahead" if you want
 	
 	void setMinMagFilter(int minFilter, int magFilter);
-	//allows you to scale all the images by a percent
-	//Make sure to set scale before you load the sequence
-	//the default is 1.0
-	float scale;
 	
   protected:
-	
-	int currentFrame;
-	ofImage	loader;
-	//vector<ofTexture*> sequence;
+	void threadedFunction();
+	void completeLoading();
+	bool preloadAllFilenames();		//searches for all filenames based on load input
+	void updateThreadedLoad(ofEventArgs& args);
+
 	vector<ofPixels> sequence;
 	vector<string> filenames;
+	int currentFrame;
 	ofTexture texture;
 	string extension;
 	
-	
+	string folderToLoad;
+
 	int maxFrames;
-	int imageTypeToGLType(int imageType);
-	float width, height;
+	bool useThread;
 	bool loaded;
+	bool loading; //only used on thread
+	bool cancelLoading;
+	float width, height;
 	int lastFrameLoaded;
 	float frameRate;
 	
 	int minFilter;
 	int magFilter;
-	//bool nonDefaultFiltersUsed;
 };
 
 

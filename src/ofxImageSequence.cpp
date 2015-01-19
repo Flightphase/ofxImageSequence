@@ -46,19 +46,24 @@
 ofxImageSequence::ofxImageSequence()
 {
 	loaded = false;
-	scale = 1.0;
+	loading = false;
+	useThread = false;
+	cancelLoading = false;
 	frameRate = 30.0f;
 	lastFrameLoaded = -1;
-	loader.setUseTexture(false);
 	currentFrame = 0;
 	maxFrames = 0;
 }
 
 ofxImageSequence::~ofxImageSequence()
 {
-	if(loaded){
-		unloadSequence();
+	if(useThread && loading){
+		cancelLoad();
 	}
+	
+	waitForThread(true);
+
+	unloadSequence();
 }
 
 bool ofxImageSequence::loadSequence(string prefix, string filetype,  int startDigit, int endDigit)
@@ -102,29 +107,63 @@ bool ofxImageSequence::loadSequence(string prefix, string filetype,  int startDi
 
 bool ofxImageSequence::loadSequence(string _folder)
 {
-	
 	unloadSequence();
 
+	folderToLoad = _folder;
+
+	if(useThread){
+		startThread(true);
+		return true;
+	}
+
+	if(preloadAllFilenames()){
+		completeLoading();
+		return true;
+	}
+	
+	return false;
+
+}
+
+void ofxImageSequence::completeLoading()
+{
+
+	if(sequence.size() == 0){
+		ofLogError("ofxImageSequence::completeLoading") << "load failed with empty image sequence";
+		return;
+	}
+
+	loaded = true;	
+	lastFrameLoaded = -1;
+	loadFrame(0);
+	
+	width  = sequence[0].getWidth();
+	height = sequence[0].getHeight();
+
+}
+
+bool ofxImageSequence::preloadAllFilenames()
+{
     ofDirectory dir;
 	if(extension != ""){
 		dir.allowExt(extension);
 	}
 	
-	if(!ofFile(_folder).exists()){
-		ofLogError("ofxImageSequence::loadSequence") << "Could not find folder " << _folder;
+	if(!ofFile(folderToLoad).exists()){
+		ofLogError("ofxImageSequence::loadSequence") << "Could not find folder " << folderToLoad;
 		return false;
 	}
 
 	int numFiles;
 	if(maxFrames > 0){
-		numFiles = MIN(dir.listDir(_folder), maxFrames);
+		numFiles = MIN(dir.listDir(folderToLoad), maxFrames);
 	}
 	else{	
-		numFiles = dir.listDir(_folder);
+		numFiles = dir.listDir(folderToLoad);
 	}
 
     if(numFiles == 0) {
-		ofLogError("ofxImageSequence::loadSequence") << "No image files found in " << _folder;
+		ofLogError("ofxImageSequence::loadSequence") << "No image files found in " << folderToLoad;
 		return false;
 	}
 
@@ -134,19 +173,46 @@ bool ofxImageSequence::loadSequence(string _folder)
 	#endif
 
 	for(int i = 0; i < numFiles; i++) {
-        filenames.push_back( dir.getPath(i) );
+        filenames.push_back(dir.getPath(i));
 		sequence.push_back(ofPixels());
     }
-   	
-    loaded = true;
-	
-	lastFrameLoaded = -1;
-	loadFrame(0);
-	
-	width  = sequence[0].getWidth();
-	height = sequence[0].getHeight();
-
 	return true;
+}
+
+void ofxImageSequence::threadedFunction()
+{
+
+	loading = true;
+	cancelLoading = false;
+
+	ofAddListener(ofEvents().update, this, &ofxImageSequence::updateThreadedLoad);
+
+	if(!preloadAllFilenames()){
+		loading = false;
+		return;
+	}
+
+	if(cancelLoading){
+		loading = false;
+		cancelLoading = false;
+		return;
+	}
+	
+	preloadAllFrames();
+	
+	loading = false;
+}
+
+void ofxImageSequence::updateThreadedLoad(ofEventArgs& args){
+	if(loading){
+		return;
+	}
+	
+	ofRemoveListener(ofEvents().update, this, &ofxImageSequence::updateThreadedLoad);
+
+	if(sequence.size() > 0){
+		completeLoading();
+	}
 }
 
 //set to limit the number of frames. negative means no limit
@@ -163,6 +229,21 @@ void ofxImageSequence::setExtension(string ext)
 	extension = ext;
 }
 
+void ofxImageSequence::enableThreadedLoad(bool enable){
+
+	if(loaded){
+		ofLogError("ofxImageSequence::enableThreadedLoad") << "Need to enable threaded loading before calling load";
+	}
+	useThread = enable;
+}
+
+void ofxImageSequence::cancelLoad()
+{
+	if(useThread && loading){
+		cancelLoading = true;
+	}
+}
+
 void ofxImageSequence::setMinMagFilter(int newMinFilter, int newMagFilter)
 {
 	minFilter = newMinFilter;
@@ -172,18 +253,21 @@ void ofxImageSequence::setMinMagFilter(int newMinFilter, int newMagFilter)
 
 void ofxImageSequence::preloadAllFrames()
 {
-	if(!loaded){
+	if(sequence.size() == 0){
 		ofLogError("ofxImageSequence::loadFrame") << "Calling preloadAllFrames on unitialized image sequence.";
 		return;
 	}
 	
-	ofImage m;
-	m.setUseTexture(false);
 	for(int i = 0; i < sequence.size(); i++){
-		if(m.loadImage(filenames[i])){
-			sequence[i] = m.getPixelsRef();
+		//threaded stuff
+		if(useThread){
+			ofSleepMillis(5);
+			if(cancelLoading){
+				return;
+			}
 		}
-		else{
+
+		if(!ofLoadImage(sequence[i], filenames[i])){
 			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[i];		
 		}
 	}
@@ -201,20 +285,15 @@ void ofxImageSequence::loadFrame(int imageIndex)
 	}
 
 	if(!sequence[imageIndex].isAllocated()){
-		ofImage m;
-		m.setUseTexture(false);
+		ofLoadImage(sequence[imageIndex], filenames[imageIndex]);
+	}
 
-		if(m.loadImage(filenames[imageIndex])){
-			sequence[imageIndex] = m.getPixelsRef();
-		}
-		else{
-			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[imageIndex];		
-		}
+	if(!sequence[imageIndex].isAllocated()){
+		ofLogError("ofxImageSequence::loadFrame") << "Pixels not allocated: " << filenames[imageIndex];
+		return;
 	}
 
 	texture.loadData(sequence[imageIndex]);
-	
-	cout << "FRAME " << lastFrameLoaded << " -> " << imageIndex << endl;
 
 	lastFrameLoaded = imageIndex;
 
@@ -237,6 +316,9 @@ float ofxImageSequence::getHeight()
 
 void ofxImageSequence::unloadSequence()
 {
+	
+	waitForThread(true);
+
 	sequence.clear();
 	filenames.clear();
 	
@@ -256,6 +338,12 @@ int ofxImageSequence::getFrameIndexAtPercent(float percent)
     if (percent < 0.0 || percent > 1.0) percent -= floor(percent);
 
 	return MIN((int)(percent*sequence.size()), sequence.size()-1);
+}
+
+//deprecated
+ofTexture& ofxImageSequence::getTextureReference()
+{
+	return getTexture();
 }
 
 //deprecated
@@ -299,12 +387,12 @@ ofTexture& ofxImageSequence::getTextureForPercent(float percent){
 void ofxImageSequence::setFrame(int index)
 {
 	if(!loaded){
-		ofLog(OF_LOG_ERROR, "ofxImageSequence - Calling getFrame on unitialized image sequence.");
+		ofLogError("ofxImageSequence::setFrame") << "Calling getFrame on unitialized image sequence.";
 		return;
 	}
 
 	if(index < 0){
-		ofLog(OF_LOG_ERROR, "ofxImageSequence - Asking for negative index.");
+		ofLogError("ofxImageSequence::setFrame") << "Asking for negative index.";
 		return;
 	}
 	
@@ -346,21 +434,11 @@ int ofxImageSequence::getTotalFrames()
 	return sequence.size();
 }
 
-int ofxImageSequence::imageTypeToGLType(int imageType)
-{
-	switch (imageType) {
-		case OF_IMAGE_GRAYSCALE:
-			return GL_LUMINANCE;
-		case OF_IMAGE_COLOR:
-			return GL_RGB;
-		case OF_IMAGE_COLOR_ALPHA:
-			return GL_RGBA;
-		default:
-			ofLog(OF_LOG_ERROR, "ofxImageSequence - unsupported image type for image");
-			return GL_RGB;
-	}
-}
 
 bool ofxImageSequence::isLoaded(){						//returns true if the sequence has been loaded
     return loaded;
+}
+
+bool ofxImageSequence::isLoading(){
+	return loading;
 }
