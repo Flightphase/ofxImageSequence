@@ -48,7 +48,8 @@
 
 #include "ofMain.h"
 
-class ofxImageSequence : public ofBaseHasTexture, public ofThread {
+class ofxImageSequenceLoader;
+class ofxImageSequence : public ofBaseHasTexture {
   public:
 
 	ofxImageSequence();
@@ -133,12 +134,13 @@ class ofxImageSequence : public ofBaseHasTexture, public ofThread {
 	void loadFrame(int imageIndex);			//allows you to load (cache) a frame to avoid a stutter when loading. use this to "read ahead" if you want
 	
 	void setMinMagFilter(int minFilter, int magFilter);
-	
-  protected:
-	void threadedFunction();
+
+	//called internally from threaded loader
 	void completeLoading();
 	bool preloadAllFilenames();		//searches for all filenames based on load input
-	void updateThreadedLoad(ofEventArgs& args);
+
+  protected:
+	ofxImageSequenceLoader* threadLoader;
 
 	vector<ofPixels> sequence;
 	vector<string> filenames;
@@ -151,8 +153,8 @@ class ofxImageSequence : public ofBaseHasTexture, public ofThread {
 	int maxFrames;
 	bool useThread;
 	bool loaded;
-	bool loading; //only used on thread
-	bool cancelLoading;
+	//bool loading; //only used on thread
+	//bool cancelLoading;
 	float width, height;
 	int lastFrameLoaded;
 	float frameRate;
@@ -160,6 +162,7 @@ class ofxImageSequence : public ofBaseHasTexture, public ofThread {
 	int minFilter;
 	int magFilter;
 };
+
 
 
 

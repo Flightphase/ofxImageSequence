@@ -43,26 +43,76 @@
 
 #include "ofxImageSequence.h"
 
+class ofxImageSequenceLoader : public ofThread
+{
+  public:
+
+	bool loading;
+	bool cancelLoading;
+	ofxImageSequence& sequenceRef;
+	
+	ofxImageSequenceLoader(ofxImageSequence* seq)
+	: sequenceRef(*seq)
+	, loading(true)
+	, cancelLoading(false)
+	{
+		startThread(true);
+	}
+	
+	~ofxImageSequenceLoader(){
+		if(loading){
+			ofRemoveListener(ofEvents().update, this, &ofxImageSequenceLoader::updateThreadedLoad);
+			cancelLoading = true;
+			waitForThread(true);
+		}
+	}
+	
+	void threadedFunction(){
+	
+		ofAddListener(ofEvents().update, this, &ofxImageSequenceLoader::updateThreadedLoad);
+
+		if(!sequenceRef.preloadAllFilenames()){
+			loading = false;
+			return;
+		}
+
+		if(cancelLoading){
+			loading = false;
+			cancelLoading = false;
+			return;
+		}
+	
+		sequenceRef.preloadAllFrames();
+	
+		loading = false;
+	}
+
+	void updateThreadedLoad(ofEventArgs& args){
+		if(loading){
+			return;
+		}
+		ofRemoveListener(ofEvents().update, this, &ofxImageSequenceLoader::updateThreadedLoad);
+
+		if(sequenceRef.getTotalFrames() > 0){
+			sequenceRef.completeLoading();
+		}
+	}
+
+};
+
 ofxImageSequence::ofxImageSequence()
 {
 	loaded = false;
-	loading = false;
 	useThread = false;
-	cancelLoading = false;
 	frameRate = 30.0f;
 	lastFrameLoaded = -1;
 	currentFrame = 0;
 	maxFrames = 0;
+	threadLoader = NULL;
 }
 
 ofxImageSequence::~ofxImageSequence()
 {
-	if(useThread && loading){
-		cancelLoad();
-	}
-	
-	waitForThread(true);
-
 	unloadSequence();
 }
 
@@ -112,7 +162,7 @@ bool ofxImageSequence::loadSequence(string _folder)
 	folderToLoad = _folder;
 
 	if(useThread){
-		startThread(true);
+		threadLoader = new ofxImageSequenceLoader(this);
 		return true;
 	}
 
@@ -179,42 +229,6 @@ bool ofxImageSequence::preloadAllFilenames()
 	return true;
 }
 
-void ofxImageSequence::threadedFunction()
-{
-
-	loading = true;
-	cancelLoading = false;
-
-	ofAddListener(ofEvents().update, this, &ofxImageSequence::updateThreadedLoad);
-
-	if(!preloadAllFilenames()){
-		loading = false;
-		return;
-	}
-
-	if(cancelLoading){
-		loading = false;
-		cancelLoading = false;
-		return;
-	}
-	
-	preloadAllFrames();
-	
-	loading = false;
-}
-
-void ofxImageSequence::updateThreadedLoad(ofEventArgs& args){
-	if(loading){
-		return;
-	}
-	
-	ofRemoveListener(ofEvents().update, this, &ofxImageSequence::updateThreadedLoad);
-
-	if(sequence.size() > 0){
-		completeLoading();
-	}
-}
-
 //set to limit the number of frames. negative means no limit
 void ofxImageSequence::setMaxFrames(int newMaxFrames)
 {
@@ -239,8 +253,10 @@ void ofxImageSequence::enableThreadedLoad(bool enable){
 
 void ofxImageSequence::cancelLoad()
 {
-	if(useThread && loading){
-		cancelLoading = true;
+	if(useThread && threadLoader != NULL){
+		threadLoader->cancelLoading = true;
+		delete threadLoader;
+		threadLoader = NULL;
 	}
 }
 
@@ -261,10 +277,10 @@ void ofxImageSequence::preloadAllFrames()
 	for(int i = 0; i < sequence.size(); i++){
 		//threaded stuff
 		if(useThread){
-			ofSleepMillis(5);
-			if(cancelLoading){
+			if(threadLoader->cancelLoading){
 				return;
 			}
+			ofSleepMillis(5);
 		}
 
 		if(!ofLoadImage(sequence[i], filenames[i])){
@@ -316,12 +332,14 @@ float ofxImageSequence::getHeight()
 
 void ofxImageSequence::unloadSequence()
 {
-	
-	waitForThread(true);
+	if(threadLoader != NULL){
+		delete threadLoader;
+		threadLoader = NULL;
+	}
 
 	sequence.clear();
 	filenames.clear();
-	
+
 	loaded = false;
 	width = 0;
 	height = 0;
@@ -434,11 +452,10 @@ int ofxImageSequence::getTotalFrames()
 	return sequence.size();
 }
 
-
 bool ofxImageSequence::isLoaded(){						//returns true if the sequence has been loaded
     return loaded;
 }
 
 bool ofxImageSequence::isLoading(){
-	return loading;
+	return threadLoader != NULL && threadLoader->loading;
 }
