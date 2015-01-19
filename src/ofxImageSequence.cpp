@@ -60,13 +60,20 @@ class ofxImageSequenceLoader : public ofThread
 	}
 	
 	~ofxImageSequenceLoader(){
+        cancel();
+    }
+	
+    void cancel(){
 		if(loading){
 			ofRemoveListener(ofEvents().update, this, &ofxImageSequenceLoader::updateThreadedLoad);
+            lock();
 			cancelLoading = true;
+            unlock();
+            loading = false;
 			waitForThread(true);
 		}
-	}
-	
+    }
+    
 	void threadedFunction(){
 	
 		ofAddListener(ofEvents().update, this, &ofxImageSequenceLoader::updateThreadedLoad);
@@ -254,7 +261,8 @@ void ofxImageSequence::enableThreadedLoad(bool enable){
 void ofxImageSequence::cancelLoad()
 {
 	if(useThread && threadLoader != NULL){
-		threadLoader->cancelLoading = true;
+        threadLoader->cancel();
+        
 		delete threadLoader;
 		threadLoader = NULL;
 	}
@@ -277,9 +285,12 @@ void ofxImageSequence::preloadAllFrames()
 	for(int i = 0; i < sequence.size(); i++){
 		//threaded stuff
 		if(useThread){
-			if(threadLoader->cancelLoading){
-				return;
-			}
+            threadLoader->lock();
+            bool shouldExit = threadLoader->cancelLoading;
+            threadLoader->unlock();
+            if(shouldExit){
+                return;
+            }
 			ofSleepMillis(5);
 		}
 
