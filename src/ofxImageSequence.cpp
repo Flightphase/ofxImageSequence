@@ -150,6 +150,7 @@ bool ofxImageSequence::loadSequence(string prefix, string filetype,  int startDi
 		sprintf(imagename, format.str().c_str(), i);
 		filenames.push_back(imagename);
 		sequence.push_back(ofPixels());
+		loadFailed.push_back(false);
 	}
 	
 	loaded = true;
@@ -211,6 +212,7 @@ bool ofxImageSequence::preloadAllFilenames()
 		return false;
 	}
 
+	cout << "LISTING DIR! " << folderToLoad << endl;
 	int numFiles;
 	if(maxFrames > 0){
 		numFiles = MIN(dir.listDir(folderToLoad), maxFrames);
@@ -224,14 +226,19 @@ bool ofxImageSequence::preloadAllFilenames()
 		return false;
 	}
 
+	cout << "DONE LISTING DIR! " << folderToLoad << endl;
+
     // read the directory for the images
 	#ifdef TARGET_LINUX
 	dir.sort();
 	#endif
 
+	cout << "BUILDING ARRAYS! " << folderToLoad << endl;
+
 	for(int i = 0; i < numFiles; i++) {
         filenames.push_back(dir.getPath(i));
 		sequence.push_back(ofPixels());
+		loadFailed.push_back(false);
     }
 	return true;
 }
@@ -295,6 +302,7 @@ void ofxImageSequence::preloadAllFrames()
 		}
 
 		if(!ofLoadImage(sequence[i], filenames[i])){
+			loadFailed[i] = true;
 			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[i];		
 		}
 	}
@@ -311,12 +319,14 @@ void ofxImageSequence::loadFrame(int imageIndex)
 		return;
 	}
 
-	if(!sequence[imageIndex].isAllocated()){
-		ofLoadImage(sequence[imageIndex], filenames[imageIndex]);
+	if(!sequence[imageIndex].isAllocated() && !loadFailed[imageIndex]){
+		if(!ofLoadImage(sequence[imageIndex], filenames[imageIndex])){
+			loadFailed[imageIndex] = true;
+			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[imageIndex];
+		}
 	}
 
-	if(!sequence[imageIndex].isAllocated()){
-		ofLogError("ofxImageSequence::loadFrame") << "Pixels not allocated: " << filenames[imageIndex];
+	if(loadFailed[imageIndex]){
 		return;
 	}
 
@@ -350,6 +360,7 @@ void ofxImageSequence::unloadSequence()
 
 	sequence.clear();
 	filenames.clear();
+	loadFailed.clear();
 
 	loaded = false;
 	width = 0;
@@ -360,6 +371,14 @@ void ofxImageSequence::unloadSequence()
 void ofxImageSequence::setFrameRate(float rate)
 {
 	frameRate = rate;
+}
+
+string ofxImageSequence::getFilePath(int index){
+	if(index > 0 && index < filenames.size()){
+		return filenames[index];
+	}
+	ofLogError("ofxImageSequence::getFilePath") << "Getting filename outside of range";
+	return "";
 }
 
 int ofxImageSequence::getFrameIndexAtPercent(float percent)

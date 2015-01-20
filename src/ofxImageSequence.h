@@ -92,11 +92,11 @@ class ofxImageSequence : public ofBaseHasTexture {
 	bool loadSequence(string prefix, string filetype, int startIndex, int endIndex, int numDigits);
     bool loadSequence(string folder);
 
+	void cancelLoad();
 	void preloadAllFrames();		//immediately loads all frames in the sequence, memory intensive but fastest scrubbing
 	void unloadSequence();			//clears out all frames and frees up memory
 
 	void setFrameRate(float rate); //used for getting frames by time, default is 30fps	
-	void cancelLoad();
 
 	//these get textures, but also change the
 	OF_DEPRECATED_MSG("Use getTextureForFrame instead.",   ofTexture* getFrame(int index));		 //returns a frame at a given index
@@ -112,6 +112,8 @@ class ofxImageSequence : public ofBaseHasTexture {
 	void setFrameForTime(float time);			
 	void setFrameAtPercent(float percent);
 	
+	string getFilePath(int index);
+
 	OF_DEPRECATED_MSG("Use getTexture() instead.", ofTexture& getTextureReference());
 
 	virtual ofTexture& getTexture();
@@ -135,6 +137,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 	
 	void setMinMagFilter(int minFilter, int magFilter);
 
+	//Do not call directly
 	//called internally from threaded loader
 	void completeLoading();
 	bool preloadAllFilenames();		//searches for all filenames based on load input
@@ -144,6 +147,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 
 	vector<ofPixels> sequence;
 	vector<string> filenames;
+	vector<bool> loadFailed;
 	int currentFrame;
 	ofTexture texture;
 	string extension;
