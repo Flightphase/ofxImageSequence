@@ -299,10 +299,10 @@ void ofxImageSequence::preloadAllFrames()
             if(shouldExit){
                 return;
             }
-			curLoadFrame = i;
+
 			ofSleepMillis(15);
 		}
-
+		curLoadFrame = i;
 		if(!ofLoadImage(sequence[i], filenames[i])){
 			loadFailed[i] = true;
 			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[i];		
@@ -315,7 +315,7 @@ float ofxImageSequence::percentLoaded(){
 		return 1.0;
 	}
 	if(isLoading() && sequence.size() > 0){
-		return curLoadFrame / sequence.size();
+		return 1.0*curLoadFrame / sequence.size();
 	}
 	return 0.0;
 }
