@@ -115,6 +115,7 @@ ofxImageSequence::ofxImageSequence()
 	lastFrameLoaded = -1;
 	currentFrame = 0;
 	maxFrames = 0;
+	curLoadFrame = 0;
 	threadLoader = NULL;
 }
 
@@ -212,7 +213,6 @@ bool ofxImageSequence::preloadAllFilenames()
 		return false;
 	}
 
-	cout << "LISTING DIR! " << folderToLoad << endl;
 	int numFiles;
 	if(maxFrames > 0){
 		numFiles = MIN(dir.listDir(folderToLoad), maxFrames);
@@ -226,16 +226,14 @@ bool ofxImageSequence::preloadAllFilenames()
 		return false;
 	}
 
-	cout << "DONE LISTING DIR! " << folderToLoad << endl;
-
     // read the directory for the images
 	#ifdef TARGET_LINUX
 	dir.sort();
 	#endif
 
-	cout << "BUILDING ARRAYS! " << folderToLoad << endl;
 
 	for(int i = 0; i < numFiles; i++) {
+
         filenames.push_back(dir.getPath(i));
 		sequence.push_back(ofPixels());
 		loadFailed.push_back(false);
@@ -292,13 +290,17 @@ void ofxImageSequence::preloadAllFrames()
 	for(int i = 0; i < sequence.size(); i++){
 		//threaded stuff
 		if(useThread){
+			if(threadLoader == NULL){
+				return;
+			}
             threadLoader->lock();
             bool shouldExit = threadLoader->cancelLoading;
             threadLoader->unlock();
             if(shouldExit){
                 return;
             }
-			ofSleepMillis(5);
+			curLoadFrame = i;
+			ofSleepMillis(15);
 		}
 
 		if(!ofLoadImage(sequence[i], filenames[i])){
@@ -306,6 +308,16 @@ void ofxImageSequence::preloadAllFrames()
 			ofLogError("ofxImageSequence::loadFrame") << "Image failed to load: " << filenames[i];		
 		}
 	}
+}
+
+float ofxImageSequence::percentLoaded(){
+	if(isLoaded()){
+		return 1.0;
+	}
+	if(isLoading() && sequence.size() > 0){
+		return curLoadFrame / sequence.size();
+	}
+	return 0.0;
 }
 
 void ofxImageSequence::loadFrame(int imageIndex)
@@ -365,6 +377,9 @@ void ofxImageSequence::unloadSequence()
 	loaded = false;
 	width = 0;
 	height = 0;
+	curLoadFrame = 0;
+	lastFrameLoaded = -1;
+	currentFrame = 0;	
 
 }
 

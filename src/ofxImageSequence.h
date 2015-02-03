@@ -141,6 +141,7 @@ class ofxImageSequence : public ofBaseHasTexture {
 	//called internally from threaded loader
 	void completeLoading();
 	bool preloadAllFilenames();		//searches for all filenames based on load input
+	float percentLoaded();
 
   protected:
 	ofxImageSequenceLoader* threadLoader;
@@ -153,12 +154,11 @@ class ofxImageSequence : public ofBaseHasTexture {
 	string extension;
 	
 	string folderToLoad;
-
+	int curLoadFrame;
 	int maxFrames;
 	bool useThread;
 	bool loaded;
-	//bool loading; //only used on thread
-	//bool cancelLoading;
+
 	float width, height;
 	int lastFrameLoaded;
 	float frameRate;
