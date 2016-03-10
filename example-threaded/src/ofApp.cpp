@@ -68,14 +68,14 @@ void ofApp::draw(){
 		ofBackground(0);
 		if(playing){
 			//get the frame based on the current time and draw it
-			sequence.getFrameForTime(ofGetElapsedTimef())->draw(0,0);
+			sequence.getTextureForTime(ofGetElapsedTimef())->draw(0,0);
 		}
 		else {
 			//get the sequence frame that maps to the mouseX position
 			float percent = ofMap(mouseX, 0, ofGetWidth(), 0, 1.0, true);
 		
 			//draw it.
-			sequence.getFrameAtPercent(percent)->draw(0, 0);
+			sequence.getTextureForPercent(percent)->draw(0, 0);
 		}
 	}
 }
