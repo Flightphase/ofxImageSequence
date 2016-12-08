@@ -389,7 +389,7 @@ void ofxImageSequence::setFrameRate(float rate)
 }
 
 string ofxImageSequence::getFilePath(int index){
-	if(index > 0 && index < filenames.size()){
+	if(index >= 0 && index < filenames.size()){
 		return filenames[index];
 	}
 	ofLogError("ofxImageSequence::getFilePath") << "Getting filename outside of range";
