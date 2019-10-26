@@ -474,6 +474,7 @@ void ofxImageSequence::setFrameForTime(float time)
 
 void ofxImageSequence::setFrameAtPercent(float percent)
 {
+	currentFrame = getFrameIndexAtPercent(percent);
 	setFrame(getFrameIndexAtPercent(percent));	
 }
 
